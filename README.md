@@ -1,6 +1,6 @@
 ## D2Coding Nerd Font
 
-* 한글 글꼴 너비 오류를 해결한 D2Coding Nerd Font 입니다.
+* 한글 글꼴 너비와 아이콘 하단 쏠림 문제를 해결한 D2Coding Nerd Font 입니다.
 
   * Notepad, Windows Terminal, Sublime Text (gdi, directwrite, ...) 등에서 정상 출력됨을 확인하였습니다.
   * 윈도우 폰트 목록에는 `D2Coding NF`로 표시되며 Windows Terminal이나 각종 IDE에서는 `D2Coding`으로 설정하면 됩니다.
