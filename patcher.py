@@ -45,6 +45,51 @@ except ImportError:
 
 class font_patcher:
     def __init__(self):
+        pass
+        # self.args = None  # class 'argparse.Namespace'
+        # self.sym_font_args = []
+        # self.config = None  # class 'configparser.ConfigParser'
+        # self.sourceFont = None  # class 'fontforge.font'
+        # self.octiconsExactEncodingPosition = True
+        # self.fontlinuxExactEncodingPosition = True
+        # self.patch_set = None  # class 'list'
+        # self.font_dim = None  # class 'dict'
+        # self.onlybitmaps = 0
+        # self.extension = ""
+        # self.setup_arguments()
+        # self.config = configparser.ConfigParser(empty_lines_in_values=False, allow_no_value=True)
+        # self.sourceFont = fontforge.open(self.args.font)
+        # self.sourceFontRange = [int(v.unicode) for v in self.sourceFont.glyphs()]
+        # self.sourceFontRange = sorted([v for v in self.sourceFontRange if v > 0])
+        # print(self.sourceFontRange)
+        # # print(dir(self.sourceFont))
+        # # print(self.sourceFont.uwidth)
+        # # print(self.sourceFont.familyname)
+        # # print(self.sourceFont.fontname)
+        # # print(self.sourceFont.fullname)
+        # # print(self.sourceFont.encoding)
+        # # print(self.sourceFont.onlybitmaps)
+        # # return
+        # self.keepOriginal = False
+        # self.setup_font_names()
+        # self.remove_ligatures()
+        # make_sure_path_exists(self.args.outputdir)
+        # self.check_position_conflicts()
+        # self.setup_patch_set()
+        # self.setup_line_dimensions()
+        # self.get_sourcefont_dimensions()
+        # # Update the font encoding to ensure that the Unicode glyphs are available
+        # self.sourceFont.encoding = 'UnicodeFull'
+        # # Fetch this property before adding outlines. NOTE self.onlybitmaps initialized and never used
+        # self.onlybitmaps = self.sourceFont.onlybitmaps
+        # if self.args.extension == "":
+        #     self.extension = os.path.splitext(self.sourceFont.path)[1]
+        # else:
+        #     self.extension = '.' + self.args.extension
+
+    def load_font(self, keepOriginal=True):
+
+        self.keepOriginal = keepOriginal
         self.args = None  # class 'argparse.Namespace'
         self.sym_font_args = []
         self.config = None  # class 'configparser.ConfigParser'
@@ -57,7 +102,11 @@ class font_patcher:
         self.extension = ""
         self.setup_arguments()
         self.config = configparser.ConfigParser(empty_lines_in_values=False, allow_no_value=True)
+
         self.sourceFont = fontforge.open(self.args.font)
+        self.sourceFontRange = [int(v.unicode) for v in self.sourceFont.glyphs()]
+        self.sourceFontRange = sorted([v for v in self.sourceFontRange if v > 0])
+        # print(self.sourceFontRange)
         # print(dir(self.sourceFont))
         # print(self.sourceFont.uwidth)
         # print(self.sourceFont.familyname)
@@ -66,6 +115,7 @@ class font_patcher:
         # print(self.sourceFont.encoding)
         # print(self.sourceFont.onlybitmaps)
         # return
+
         self.setup_font_names()
         self.remove_ligatures()
         make_sure_path_exists(self.args.outputdir)
@@ -82,7 +132,17 @@ class font_patcher:
         else:
             self.extension = '.' + self.args.extension
 
+        # self.sourceFont.close()
+
     def patch(self):
+        self.load_font(keepOriginal=True)
+        self._patch()
+        self.sourceFont.close()
+        self.load_font(keepOriginal=False)
+        self._patch()
+        self.sourceFont.close()
+
+    def _patch(self):
         if self.args.single:
             # Force width to be equal on all glyphs to ensure the font is considered monospaced on Windows.
             # This needs to be done on all characters, as some information seems to be lost from the original font file.
@@ -113,27 +173,29 @@ class font_patcher:
                     SrcStart = patch['SymStart']
                 if not SrcEnd:
                     SrcEnd = patch['SymEnd']
+
                 self.copy_glyphs(SrcStart, SrcEnd, symfont, patch['SymStart'], patch['SymEnd'],
                                  patch['Exact'], patch['ScaleGlyph'], patch['Name'], patch['Attributes'])
 
         if symfont:
             symfont.close()
-        print("\nDone with Patch Sets, generating font...")
+        # print("\nDone with Patch Sets, generating font...")
 
         # the `PfEd-comments` flag is required for Fontforge to save '.comment' and '.fontlog'.
         if self.sourceFont.fullname != None:
             self.sourceFont.generate(self.args.outputdir + "/" + self.sourceFont.fullname +
                                      self.extension, flags=(str('opentype'), str('PfEd-comments')))
-            print("\nGenerated: {}".format(self.sourceFont.fontname))
+            # print("\nGenerated: {}".format(self.sourceFont.fontname))
+
         else:
             self.sourceFont.generate(self.args.outputdir + "/" + self.sourceFont.cidfontname +
                                      self.extension, flags=(str('opentype'), str('PfEd-comments')))
-            print("\nGenerated: {}".format(self.sourceFont.fullname))
+            # print("\nGenerated: {}".format(self.sourceFont.fullname))
 
         if self.args.postprocess:
             subprocess.call([self.args.postprocess, self.args.outputdir +
                              "/" + self.sourceFont.fullname + self.extension])
-            print("\nPost Processed: {}".format(self.sourceFont.fullname))
+            # print("\nPost Processed: {}".format(self.sourceFont.fullname))
 
     def setup_arguments(self):
         parser = argparse.ArgumentParser(
@@ -260,11 +322,16 @@ class font_patcher:
         # ])
 
     def setup_font_names(self):
+        # projectName = "Nerd Fonts"
+        # projectNameAbbreviation = "NF"
+        # projectNameSingular = projectName[:-1]
+
         verboseAdditionalFontNameSuffix = " " + projectNameSingular
         if self.args.windows:  # attempt to shorten here on the additional name BEFORE trimming later
             additionalFontNameSuffix = " " + projectNameAbbreviation
         else:
             additionalFontNameSuffix = verboseAdditionalFontNameSuffix
+
         if not self.args.complete:
             # NOTE not all symbol fonts have appended their suffix here
             if self.args.fontawesome:
@@ -301,6 +368,10 @@ class font_patcher:
         if self.args.single:
             additionalFontNameSuffix += " M"
             verboseAdditionalFontNameSuffix += " Mono"
+
+        if not self.keepOriginal:
+            additionalFontNameSuffix += ' X'
+            verboseAdditionalFontNameSuffix += ' X'
 
         # basically split the font name around the dash "-" to get the fontname and the style (e.g. Bold)
         # this does not seem very reliable so only use the style here as a fallback if the font does not
@@ -361,10 +432,15 @@ class font_patcher:
             if self.args.single:
                 familyname += " Mono"
 
+        if not self.keepOriginal:
+            familyname += ' X'
+
         # Don't truncate the subfamily to keep fontname unique.  MacOS treats fonts with
         # the same name as the same font, even if subFamily is different.
         fontname += '-' + subFamily
 
+        familyname = ''.join(familyname.split(' '))
+        fontname = ''.join(familyname.split(' '))
         # rename font
         #
         # comply with SIL Open Font License (OFL)
@@ -431,13 +507,35 @@ class font_patcher:
         self.sourceFont.fullname = " ".join(fullname.split())
         self.sourceFont.fontname = " ".join(fontname.split())
 
+        # print('-' * 50)
+        # print(self.sourceFont.familyname)
+        # print(self.sourceFont.fullname)
+        # print(self.sourceFont.fontname)
+        # print(version)
+        # print(str(self.sourceFont.version))
+        # print(subFamily)
+        # print('-' * 50)
+        # 1.3.2; Build 20180524
+
+        vs = self.sourceFont.version.split(' ')
+        vv = vs[0].strip(';')
+        vdt = vs[-1].strip()
+        # vv = re.match(r'([0-9]+\.[\d]+\.[\d]+)', str(self.sourceFont.version)).group(1)
+        # vdt = re.match(r'[0-9]+$', str(self.sourceFont.version)).group(1)
+        # print(vv, vdt)
+        self.sourceFont.fullname = f'{self.sourceFont.familyname}-Ver{vv}-{vdt}'
+
+        # self.sourceFont.fullname = self.sourceFont.fullname.replace(
+        #     'D2Coding Nerd Font', 'D2CodingNF')
+
         self.sourceFont.appendSFNTName(str('English (US)'), str(
             'Preferred Family'), self.sourceFont.familyname)
         self.sourceFont.appendSFNTName(str('English (US)'), str(
             'Family'), self.sourceFont.familyname)
         self.sourceFont.appendSFNTName(str('English (US)'), str(
             'Compatible Full'), self.sourceFont.fullname)
-        self.sourceFont.appendSFNTName(str('English (US)'), str('SubFamily'), subFamily)
+        self.sourceFont.appendSFNTName(str('English (US)'), str(
+            'SubFamily'), subFamily)
         self.sourceFont.comment = projectInfo
         self.sourceFont.fontlog = projectInfo
 
@@ -454,19 +552,21 @@ class font_patcher:
         # let's deal with ligatures (mostly for monospaced fonts)
         if self.args.configfile and self.config.read(self.args.configfile):
             if self.args.removeligatures:
-                print("Removing ligatures from configfile `Subtables` section")
+                # print("Removing ligatures from configfile `Subtables` section")
                 ligature_subtables = json.loads(self.config.get("Subtables", "ligatures"))
                 for subtable in ligature_subtables:
-                    print("Removing subtable:", subtable)
-                try:
-                    self.sourceFont.removeLookupSubtable(subtable)
-                    print("Successfully removed subtable:", subtable)
-                except Exception:
-                    print("Failed to remove subtable:", subtable)
-            elif self.args.removeligatures:
-                print("Unable to read configfile, unable to remove ligatures")
-            else:
-                print("No configfile given, skipping configfile related actions")
+                    pass
+                    # print("Removing subtable:", subtable)
+                    try:
+                        self.sourceFont.removeLookupSubtable(subtable)
+                        # print("Successfully removed subtable:", subtable)
+                    except Exception:
+                        pass
+                        # print("Failed to remove subtable:", subtable)
+            # elif self.args.removeligatures:
+            #     print("Unable to read configfile, unable to remove ligatures")
+            # else:
+            #     print("No configfile given, skipping configfile related actions")
 
     def check_position_conflicts(self):
         # Prevent glyph encoding position conflicts between glyph sets
@@ -694,6 +794,8 @@ class font_patcher:
         if scaleGlyph:
             sym_dim = get_glyph_dimensions(symbolFont[scaleGlyph['ScaleGlyph']])
             scale_factor = self.get_scale_factor(sym_dim)
+            # scale_factor = 1
+            # print(symbolFont, sym_dim, scale_factor)
 
         # Create glyphs from symbol font
         #
@@ -714,11 +816,15 @@ class font_patcher:
             glyphSetLength += 1
         # end for
 
-        if self.args.quiet is False:
-            sys.stdout.write("Adding " + str(max(1, glyphSetLength)) +
-                             " Glyphs from " + setName + " Set \n")
+        # if self.args.quiet is False:
+        #     sys.stdout.write("Adding " + str(max(1, glyphSetLength)) +
+        #                      " Glyphs from " + setName + " Set \n")
 
         for index, sym_glyph in enumerate(symbolFont.selection.byGlyphs):
+            # if int(sym_glyph.unicode) in self.sourceFontRange:
+            #     print(sym_glyph.unicode, int(sym_glyph.unicode))
+            #     continue
+
             index = max(1, index)
 
             try:
@@ -740,21 +846,32 @@ class font_patcher:
                 sourceFontCounter += 1
 
             if int(copiedToSlot, 16) < 0:
-                print("Found invalid glyph slot number. Skipping.")
+                # print("Found invalid glyph slot number. Skipping.")
                 continue
 
-            if self.args.quiet is False:
-                if self.args.progressbars:
-                    update_progress(round(float(index + 1) / glyphSetLength, 2))
-                else:
-                    progressText = "\nUpdating glyph: " + \
-                        str(sym_glyph) + " " + str(sym_glyph.glyphname) + \
-                        " putting at: " + copiedToSlot
-                    sys.stdout.write(progressText)
-                    sys.stdout.flush()
+            # if sym_glyph.width:
+            #     sym_glyph.width = self.font_dim['width']
+
+            # sym_glyph.vwidth = self.font_dim['width'] * 2
+
+            # if self.args.quiet is False:
+            #     if self.args.progressbars:
+            #         update_progress(round(float(index + 1) / glyphSetLength, 2))
+            #     else:
+            #         progressText = "\nUpdating glyph: " + \
+            #             str(sym_glyph) + " " + str(sym_glyph.glyphname) + \
+            #             " putting at: " + copiedToSlot
+            #         sys.stdout.write(progressText)
+            #         sys.stdout.flush()
 
             # Prepare symbol glyph dimensions
             sym_dim = get_glyph_dimensions(sym_glyph)
+
+            # sym_dim = get_glyph_dimensions(symbolFont[scaleGlyph['ScaleGlyph']])
+            # scale_factor = self.get_scale_factor(sym_dim)
+            # # scale_factor = 1
+            # print(symbolFont, sym_dim, scale_factor)
+            # scale_factor = 0.1
 
             # check if a glyph already exists in this location
             if careful or 'careful' in sym_attr['params']:
@@ -762,8 +879,8 @@ class font_patcher:
                     copiedToSlot = copiedToSlot[3:]
                 codepoint = int("0x" + copiedToSlot, 16)
                 if codepoint in self.sourceFont:
-                    if self.args.quiet is False:
-                        print("  Found existing Glyph at {}. Skipping...".format(copiedToSlot))
+                    # if self.args.quiet is False:
+                    #     print("  Found existing Glyph at {}. Skipping...".format(copiedToSlot))
 
                     # We don't want to touch anything so move to next Glyph
                     continue
@@ -861,6 +978,17 @@ class font_patcher:
             # does not overlap the bearings (edges)
             self.remove_glyph_neg_bearings(self.sourceFont[currentSourceFontGlyph])
 
+            # glyph = self.sourceFont[currentSourceFontGlyph]
+            # glyph.width = self.font_dim['width']
+            # glyph.vwidth = self.font_dim['width'] * 2
+            # if glyph.left_side_bearing < 0:
+            #     glyph.left_side_bearing = 0
+            # if glyph.right_side_bearing < 0:
+            #     glyph.right_side_bearing = 0
+
+            # glyph.left_side_bearing = 0
+            # glyph.right_side_bearing = 0
+
             # reset selection so iteration works properly @TODO fix? rookie misunderstanding?
             # This is likely needed because the selection was changed when the glyph was copy/pasted
             if symbolFontStart == 0:
@@ -870,43 +998,53 @@ class font_patcher:
                                             symbolFontStart, symbolFontEnd)
         # end for
 
-        if self.args.quiet is False or self.args.progressbars:
-            sys.stdout.write("\n")
+        # if self.args.quiet is False or self.args.progressbars:
+        #     sys.stdout.write("\n")
 
     def set_sourcefont_glyph_widths(self):
         """ Makes self.sourceFont monospace compliant """
-
+        if self.keepOriginal:
+            return
         for glyph in self.sourceFont.glyphs():
-            if (glyph.width == self.font_dim['width']):
-                # Don't touch the (negative) bearings if the width is ok
-                # Ligartures will have these.
+            if glyph.width == self.font_dim['width']:
                 continue
 
-            if (glyph.width != 0):
-                # If the width is zero this glyph is intened to be printed on top of another one.
-                # In this case we need to keep the negative bearings to shift it 'left'.
-                # Things like &Auml; have these: composed of U+0041 'A' and U+0308 'double dot above'
-                #
-                # If width is not zero, correct the bearings such that they are within the width:
+            if glyph.width != 0:
                 self.remove_glyph_neg_bearings(glyph)
 
-            # print(dir(glyph))
-            # print(glyph.font)
-            # print(glyph.unicode)
-            # AC00-D7AF
-            # 44032-55215
+            # glyph.width = self.font_dim['width'] * 2
+            # self.set_glyph_width_mono(glyph)
 
-            self.set_glyph_width_mono(glyph)
+            # if (glyph.width != 0):
+            #     # If the width is zero this glyph is intened to be printed on top of another one.
+            #     # In this case we need to keep the negative bearings to shift it 'left'.
+            #     # Things like &Auml; have these: composed of U+0041 'A' and U+0308 'double dot above'
+            #     #
+            #     # If width is not zero, correct the bearings such that they are within the width:
+            #     # if not self.is_wide_char(glyph):
+            #         self.remove_glyph_neg_bearings(glyph)
+
+            # if self.is_wide_char(glyph) and glyph.width:
+            #     self.remove_glyph_neg_bearings(glyph)
+            #     glyph.width = self.font_dim['width'] * 2
+
+            if self.is_wide_char(glyph):
+                continue
+            #     glyph.width = self.font_dim['width']
+            # else:
+            glyph.width = self.font_dim['width']
+            # self.set_glyph_width_mono(glyph)
 
     def remove_glyph_neg_bearings(self, glyph):
         """ Sets passed glyph's bearings 0 if they are negative. """
-        try:
-            if glyph.left_side_bearing < 0:
-                glyph.left_side_bearing = 0
-            if glyph.right_side_bearing < 0:
-                glyph.right_side_bearing = 0
-        except:
-            pass
+
+        # code = int(glyph.unicode)
+        # if code in self.sourceFontRange:
+        #     return
+        if glyph.left_side_bearing < 0:
+            glyph.left_side_bearing = 0
+        if glyph.right_side_bearing < 0:
+            glyph.right_side_bearing = 0
 
     def set_glyph_width_mono(self, glyph):
         """ Sets passed glyph.width to self.font_dim.width.
@@ -914,23 +1052,40 @@ class font_patcher:
         self.font_dim.width is set with self.get_sourcefont_dimensions().
         """
 
-        # 한글 유니코드 글자 범위 AC00-D7AF (44032-55215)
+        # if self.is_wide_char(glyph):
+        #     glyph.width = self.font_dim['width'] * 2
+        #     return
 
+        glyph.width = self.font_dim['width']
+
+    def is_wide_char(self, glyph):
+        r'/[ㄱ-ㅎ|가-힣|a-zA-Z\-\.\s]/'
+        '''
+        가나다라마바사김감교쿄가나다라마
+        ㄱㄴㄳㅄㄸㅉㅒㅣㅖ쫒힣쫀득짠뜪쫀
+        12345678901234567890abcdefABCDEF
+        🥺
+        '''
+
+        # https://jrgraphix.net/r/Unicode/
         code = int(glyph.unicode)
-        if code >= 44032 and code <= 55215:
-            print(glyph.unicode)
-            return
-
-        # 한글 유니코드 문자 범위 (12593-12622)
-
-        if code >= 12593 and code <= 12622:
-            print(glyph.unicode)
-            return
-
-        try:
-            glyph.width = self.font_dim['width']
-        except:
-            pass
+        return any([
+            (int('1100', 16) <= code <= int('11FF', 16)),  # Hangul Jamo
+            (int('3130', 16) <= code <= int('318F', 16)),  # Hangul Compatibility Jamo
+            (int('AC00', 16) <= code <= int('D7AF', 16)),  # Hangul Syllables
+            # (int('3040', 16) <= code <= int('309F', 16)),  # Hiragana
+            # (int('30A0', 16) <= code <= int('30FF', 16)),  # Katakana
+            # (int('2E80', 16) <= code <= int('2EFF', 16)),  # CJK Radicals Supplement
+            # (int('3000', 16) <= code <= int('303F', 16)),  # CJK Symbols and Punctuation
+            # (int('3200', 16) <= code <= int('32FF', 16)),  # Enclosed CJK Letters and Months
+            # (int('3300', 16) <= code <= int('33FF', 16)),  # CJK Compatibility
+            # (int('3400', 16) <= code <= int('4DBF', 16)),  # CJK Unified Ideographs Extension A
+            # (int('4E00', 16) <= code <= int('9FFF', 16)),  # CJK Unified Ideographs
+            # (int('F900', 16) <= code <= int('FAFF', 16)),  # CJK Compatibility Ideographs
+            # (int('FE30', 16) <= code <= int('FE4F', 16)),  # CJK Compatibility Forms
+            # (int('20000', 16) <= code <= int('2A6DF', 16)),  # CJK Unified Ideographs Extension B
+            # (int('2F800', 16) <= code <= int('2FA1F', 16)), # CJK Compatibility Ideographs Supplement
+        ])
 
 
 def replace_font_name(font_name, replacement_dict):
@@ -981,6 +1136,7 @@ def update_progress(progress):
     A value at 1 or bigger represents 100%
     modified from: https://stackoverflow.com/questions/3160699/python-progress-bar
     """
+    return
     barLength = 40  # Modify this to change the length of the progress bar
     if isinstance(progress, int):
         progress = float(progress)
