@@ -9,8 +9,7 @@
 
 * 기존 폰트를 제거하고 다음의 파일만 설치하면 됩니다. 각 폰트에 Regular, Bold 모두 포함되어 있는 통합 본입니다.
 
-    `D2CodingNF-Ver1.3.2-20180524.ttf`
-    `D2CodingNFX-Ver1.3.2-20180524.ttf`
+    * `D2CodingNF-Ver1.3.2-20180524.ttf`, `D2CodingNFX-Ver1.3.2-20180524.ttf`
 
 * 직접 제작하기 위해서는 다음과 같이 `patcher.py`를 사용합니다.
 
