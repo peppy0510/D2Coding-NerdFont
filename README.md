@@ -25,7 +25,3 @@
     ```bash
     fontforge -script patcher.py "D2Coding-Ver1.3.2-20180524.ttf" --windows --complete --careful --postprocess --removeligatures --adjust-line-height --glyphdir "glyphs/" --outputdir "output/" --extension "ttf" --quiet --no-progressbars --use-single-width-glyphs
     ```
-
-    ```bash
-    fontforge -script patcher.py "D2CodingBold-Ver1.3.2-20180524.ttf" --windows --complete --careful --postprocess --removeligatures --adjust-line-height --glyphdir "glyphs/" --outputdir "output/" --extension "ttf" --quiet --no-progressbars --use-single-width-glyphs
-    ```
