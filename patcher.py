@@ -914,10 +914,16 @@ class font_patcher:
         self.font_dim.width is set with self.get_sourcefont_dimensions().
         """
 
-        # 한글 유니코드 범위 AC00-D7AF (44032-55215)
+        # 한글 유니코드 글자 범위 AC00-D7AF (44032-55215)
 
         code = int(glyph.unicode)
         if code >= 44032 and code <= 55215:
+            print(glyph.unicode)
+            return
+
+        # 한글 유니코드 문자 범위 (12593-12622)
+
+        if code >= 12593 and code <= 12622:
             print(glyph.unicode)
             return
 
