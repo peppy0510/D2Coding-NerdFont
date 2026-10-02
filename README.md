@@ -7,9 +7,10 @@
 	* `gdi` 방식으로 폰트를 렌더링하는 클라이언트(Notepad 등)에서는 `D2CodingNFX`를 선택해야 자간이 정상 출력 됩니다.
     * `directdraw` 방식으로 폰트를 렌더링하는 클라이언트(Windows Terminal 등)에서는 `D2CodingNF`를 선택해야 자간이 정상 출력 됩니다.
 
-* 기존 폰트를 제거하고 다음의 파일만 설치하면 됩니다. 각 폰트에 Regular, Bold 모두 포함되어 있는 통합 본입니다.
+* 기존 폰트를 제거하고 다음의 파일을 설치하면 됩니다. Regular와 Bold는 별도 파일입니다.
 
-    * `D2CodingNF-Ver1.3.2-20180524.ttf`, `D2CodingNFX-Ver1.3.2-20180524.ttf`
+    * Regular: `D2CodingNF-Ver1.3.2-20180524.ttf`, `D2CodingNFX-Ver1.3.2-20180524.ttf`
+    * Bold: `D2CodingNF-Bold-Ver1.3.2-20180524.ttf`, `D2CodingNFX-Bold-Ver1.3.2-20180524.ttf`
 
 * 직접 제작하기 위해서는 다음과 같이 `patcher.py`를 사용합니다.
 
@@ -17,6 +18,7 @@
     * `fontforge`가 설치 되어 있어야 합니다.
     * `--use-single-width-glyphs` 옵션을 추가해야 예외처리 됩니다.
     * WSL에서의 빌드를 권장합니다.
+    * Bold는 `D2CodingBold-Ver1.3.2-20180524.ttf`로 같은 명령을 실행합니다. 패처가 패밀리 이름을 `D2CodingBoldNF`로 출력하므로, Regular와 같은 패밀리(`D2CodingNF`, `D2CodingNFX`)의 Bold로 이름을 바꾸고 글폭을 Regular에 맞춰야 합니다.
 
     ```bash
     apt install fontforge
